@@ -37,19 +37,41 @@ suite('Functional Tests', function () {
    * ----[END of EXAMPLE TEST]----
    */
 
+  suite.only('Delete test data', function () {
+    test('Test delete all data in the db', function (done) {
+      chai
+        .request(server)
+        .delete('/api/delete-testdata')
+        .end(function (err, res) {
+          assert.equal(res.status, 200);
+          assert.equal(res.text, 'successfully deleted all test data');
+        });
+      chai
+        .request(server)
+        .get('/api/books')
+        .end(function (err, res) {
+          assert.equal(res.status, 200);
+          assert.equal(res.body.length, 0);
+          done();
+        });
+    });
+  });
+
+  let testData = [{ title: 'Test title 0' }, { title: 'Test title 1' }];
+
   suite('Routing tests', function () {
-    suite('POST /api/books with title => create book object/expect book object', function () {
+    suite.only('POST /api/books with title => create book object/expect book object', function () {
       test('Test POST /api/books with title', function (done) {
-        const testTitle = 'This book is a test';
+        const testTitle = testData[0].title;
         chai
           .request(server)
-          .keepOpen()
           .post('/api/books')
           .send({ title: testTitle })
           .end(function (err, res) {
             assert.equal(res.status, 200);
             assert.equal(res.body.title, testTitle);
             assert.isOk(mongoose.isValidObjectId(res.body._id));
+            testData[0]._id = res.body._id;
             done();
           });
       });
@@ -57,7 +79,6 @@ suite('Functional Tests', function () {
       test('Test POST /api/books with no title given', function (done) {
         chai
           .request(server)
-          .keepOpen()
           .post('/api/books')
           .send({})
           .end(function (err, res) {
@@ -68,19 +89,55 @@ suite('Functional Tests', function () {
       });
     });
 
-    suite('GET /api/books => array of books', function () {
+    suite.only('GET /api/books => array of books', function () {
       test('Test GET /api/books', function (done) {
-        //done();
+        const testTitle = testData[1].title;
+        chai
+          .request(server)
+          .post('/api/books')
+          .send({ title: testTitle })
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+          });
+        chai
+          .request(server)
+          .get('/api/books')
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.deepInclude(res.body[res.body.length - 1], { title: testTitle, commentcount: 0 });
+            assert.isOk(mongoose.isValidObjectId(res.body[0]._id));
+            testData[1]._id = res.body[res.body.length - 1]._id;
+            done();
+          });
       });
     });
 
-    suite('GET /api/books/[id] => book object with [id]', function () {
+    suite.only('GET /api/books/[id] => book object with [id]', function () {
       test('Test GET /api/books/[id] with id not in db', function (done) {
-        //done();
+        const invalidId = new mongoose.Types.ObjectId().toString();
+        chai
+          .request(server)
+          .get(`/api/books/${invalidId}`)
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'no book exists');
+            done();
+          });
       });
 
       test('Test GET /api/books/[id] with valid id in db', function (done) {
-        //done();
+        const validId = testData[0]._id;
+        console.log('testData: ', testData);
+        chai
+          .request(server)
+          .get(`/api/books/${validId}`)
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.hasAllKeys(res.body, ['title', '_id', 'comments']);
+            assert.deepInclude(res.body, testData[0]);
+            assert.deepEqual(res.body.comments, []);
+            done();
+          });
       });
     });
 

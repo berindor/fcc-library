@@ -10,20 +10,39 @@
 const Books = require('../book_model.js');
 
 module.exports = async function (app) {
+  app.delete('/api/delete-testdata', async function (req, res) {
+    //deletes all test data
+    try {
+      await Books.deleteMany({});
+      console.log('successfully deleted all test data');
+      res.send('successfully deleted all test data');
+    } catch (err) {
+      res.status(500).send(err);
+    }
+  });
   app
     .route('/api/books')
-    .get(function (req, res) {
+    .get(async function (req, res) {
       //response will be array of book objects
       //json res format: [{"_id": bookid, "title": book_title, "commentcount": num_of_comments },...]
+      try {
+        const allBooksInDb = await Books.find({});
+        const allBooks = allBooksInDb.map(({ title, _id, comments }) => {
+          return { title, _id, commentcount: comments.length };
+        });
+        res.json(allBooks);
+      } catch (err) {
+        res.status(500).send(err);
+      }
     })
 
     .post(async function (req, res) {
+      //response will contain new book object including atleast _id and title
       let title = req.body.title;
       try {
         if (title === undefined) return res.send('missing required field title');
         const { __v, ...bookInDb } = (await Books.create({ title: title })).toObject();
         res.send(bookInDb);
-        //response will contain new book object including atleast _id and title
       } catch (err) {
         res.status(500).send(err);
       }
@@ -35,9 +54,16 @@ module.exports = async function (app) {
 
   app
     .route('/api/books/:id')
-    .get(function (req, res) {
-      let bookid = req.params.id;
+    .get(async function (req, res) {
       //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
+      let bookid = req.params.id;
+      try {
+        const book = await Books.findById(bookid, '-__v');
+        if (book === null) return res.send('no book exists');
+        res.json(book);
+      } catch (err) {
+        res.status(500).send(err);
+      }
     })
 
     .post(function (req, res) {
