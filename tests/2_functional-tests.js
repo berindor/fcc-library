@@ -18,8 +18,8 @@ suite('Functional Tests', function () {
   /*
    * ----[EXAMPLE TEST]----
    * Each test should completely test the response of the API end-point including response status code!
-   */
-  test.skip('#example Test GET /api/books', function (done) {
+  
+  test('#example Test GET /api/books', function (done) {
     chai
       .request(server)
       .get('/api/books')
@@ -32,12 +32,12 @@ suite('Functional Tests', function () {
         done();
       });
   });
-  /*
    * ----[END of EXAMPLE TEST]----
    */
 
   //extra test for deleting all books
-  suite.skip('Delete all books', function () {
+  /*
+  suite('Delete all books', function () {
     test('DELETE /api/books => deletes all books', function (done) {
       chai
         .request(server)
@@ -56,6 +56,7 @@ suite('Functional Tests', function () {
         });
     });
   });
+  */
 
   let testData = [{ title: 'Test title 0' }, { title: 'Test title 1' }];
 
