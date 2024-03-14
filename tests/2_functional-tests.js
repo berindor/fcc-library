@@ -11,7 +11,6 @@ const chai = require('chai');
 const assert = chai.assert;
 const server = require('../server');
 const mongoose = require('mongoose');
-const Books = require('../book_model.js');
 
 chai.use(chaiHttp);
 
@@ -37,7 +36,8 @@ suite('Functional Tests', function () {
    * ----[END of EXAMPLE TEST]----
    */
 
-  suite.only('Delete test data', function () {
+  //extra test for deleting test data
+  suite('Delete test data', function () {
     test('Test delete all data in the db', function (done) {
       chai
         .request(server)
@@ -60,7 +60,7 @@ suite('Functional Tests', function () {
   let testData = [{ title: 'Test title 0' }, { title: 'Test title 1' }];
 
   suite('Routing tests', function () {
-    suite.only('POST /api/books with title => create book object/expect book object', function () {
+    suite('POST /api/books with title => create book object/expect book object', function () {
       test('Test POST /api/books with title', function (done) {
         const testTitle = testData[0].title;
         chai
@@ -89,7 +89,7 @@ suite('Functional Tests', function () {
       });
     });
 
-    suite.only('GET /api/books => array of books', function () {
+    suite('GET /api/books => array of books', function () {
       test('Test GET /api/books', function (done) {
         const testTitle = testData[1].title;
         chai
@@ -112,7 +112,7 @@ suite('Functional Tests', function () {
       });
     });
 
-    suite.only('GET /api/books/[id] => book object with [id]', function () {
+    suite('GET /api/books/[id] => book object with [id]', function () {
       test('Test GET /api/books/[id] with id not in db', function (done) {
         const invalidId = new mongoose.Types.ObjectId().toString();
         chai
@@ -127,7 +127,6 @@ suite('Functional Tests', function () {
 
       test('Test GET /api/books/[id] with valid id in db', function (done) {
         const validId = testData[0]._id;
-        console.log('testData: ', testData);
         chai
           .request(server)
           .get(`/api/books/${validId}`)
@@ -143,25 +142,78 @@ suite('Functional Tests', function () {
 
     suite('POST /api/books/[id] => add comment/expect book object with id', function () {
       test('Test POST /api/books/[id] with comment', function (done) {
-        //done();
+        const validId = testData[0]._id;
+        const testComment = 'test comment 0';
+        testData[0].comments = [testComment];
+        chai
+          .request(server)
+          .post(`/api/books/${validId}`)
+          .send({ id: validId, comment: testComment })
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.hasAllKeys(res.body, ['title', '_id', 'comments']);
+            assert.deepInclude(res.body, testData[0]);
+            done();
+          });
       });
 
       test('Test POST /api/books/[id] without comment field', function (done) {
-        //done();
+        const validId = testData[0]._id;
+        chai
+          .request(server)
+          .post(`/api/books/${validId}`)
+          .send({ id: validId })
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'missing required field comment');
+            done();
+          });
       });
 
       test('Test POST /api/books/[id] with comment, id not in db', function (done) {
-        //done();
+        const invalidId = new mongoose.Types.ObjectId().toString();
+        chai
+          .request(server)
+          .post(`/api/books/${invalidId}`)
+          .send({ id: invalidId, comment: 'new comment' })
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'no book exists');
+            done();
+          });
       });
     });
 
     suite('DELETE /api/books/[id] => delete book object id', function () {
       test('Test DELETE /api/books/[id] with valid id in db', function (done) {
-        //done();
+        const validId = testData[0]._id;
+        chai
+          .request(server)
+          .delete(`/api/books/${validId}`)
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'delete successful');
+          });
+        chai
+          .request(server)
+          .get(`/api/books/${validId}`)
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'no book exists');
+            done();
+          });
       });
 
       test('Test DELETE /api/books/[id] with  id not in db', function (done) {
-        //done();
+        const invalidId = new mongoose.Types.ObjectId().toString();
+        chai
+          .request(server)
+          .delete(`/api/books/${invalidId}`)
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'no book exists');
+            done();
+          });
       });
     });
   });

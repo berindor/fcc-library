@@ -66,14 +66,35 @@ module.exports = async function (app) {
       }
     })
 
-    .post(function (req, res) {
-      let bookid = req.params.id;
-      let comment = req.body.comment;
+    .post(async function (req, res) {
       //json res format same as .get
+      try {
+        let bookid = req.params.id;
+        let comment = req.body.comment;
+        if (comment === undefined) return res.send('missing required field comment');
+        const bookInDb = await Books.findById(bookid, 'comments');
+        if (bookInDb === null) return res.send('no book exists');
+        bookInDb.comments.push(comment);
+        const updatedBook = await Books.findByIdAndUpdate(
+          bookid,
+          { comments: bookInDb.comments },
+          { returnDocument: 'after', select: '-__v', lean: true }
+        );
+        res.json(updatedBook);
+      } catch (err) {
+        res.status(500).send(err);
+      }
     })
 
-    .delete(function (req, res) {
-      let bookid = req.params.id;
+    .delete(async function (req, res) {
       //if successful response will be 'delete successful'
+      try {
+        let bookid = req.params.id;
+        const bookInDb = await Books.findByIdAndDelete(bookid);
+        if (bookInDb === null) return res.send('no book exists');
+        res.send('delete successful');
+      } catch (err) {
+        res.status(500).send(err);
+      }
     });
 };
