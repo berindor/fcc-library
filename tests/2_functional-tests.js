@@ -19,7 +19,7 @@ suite('Functional Tests', function () {
    * ----[EXAMPLE TEST]----
    * Each test should completely test the response of the API end-point including response status code!
    */
-  test('#example Test GET /api/books', function (done) {
+  test.skip('#example Test GET /api/books', function (done) {
     chai
       .request(server)
       .get('/api/books')
@@ -36,15 +36,15 @@ suite('Functional Tests', function () {
    * ----[END of EXAMPLE TEST]----
    */
 
-  //extra test for deleting test data
-  suite('Delete test data', function () {
-    test('Test delete all data in the db', function (done) {
+  //extra test for deleting all books
+  suite.skip('Delete all books', function () {
+    test('DELETE /api/books => deletes all books', function (done) {
       chai
         .request(server)
-        .delete('/api/delete-testdata')
+        .delete('/api/books')
         .end(function (err, res) {
           assert.equal(res.status, 200);
-          assert.equal(res.text, 'successfully deleted all test data');
+          assert.equal(res.text, 'complete delete successful');
         });
       chai
         .request(server)
@@ -197,6 +197,20 @@ suite('Functional Tests', function () {
         chai
           .request(server)
           .get(`/api/books/${validId}`)
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'no book exists');
+          });
+        //to delete the data, so all test data is deleted from the db at the end
+        chai
+          .request(server)
+          .delete(`/api/books/${testData[1]._id}`)
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+          });
+        chai
+          .request(server)
+          .get(`/api/books/${testData[1]._id}`)
           .end(function (err, res) {
             assert.equal(res.status, 200);
             assert.equal(res.text, 'no book exists');

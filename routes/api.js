@@ -10,16 +10,6 @@
 const Books = require('../book_model.js');
 
 module.exports = async function (app) {
-  app.delete('/api/delete-testdata', async function (req, res) {
-    //deletes all test data
-    try {
-      await Books.deleteMany({});
-      console.log('successfully deleted all test data');
-      res.send('successfully deleted all test data');
-    } catch (err) {
-      res.status(500).send(err);
-    }
-  });
   app
     .route('/api/books')
     .get(async function (req, res) {
@@ -48,8 +38,14 @@ module.exports = async function (app) {
       }
     })
 
-    .delete(function (req, res) {
+    .delete(async function (req, res) {
       //if successful response will be 'complete delete successful'
+      try {
+        await Books.deleteMany({});
+        res.send('complete delete successful');
+      } catch (err) {
+        res.status(500).send(err);
+      }
     });
 
   app
