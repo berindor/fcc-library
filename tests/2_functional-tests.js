@@ -11,15 +11,20 @@ const chai = require('chai');
 const assert = chai.assert;
 const server = require('../server');
 const mongoose = require('mongoose');
+const Books = require('../book_model.js');
 
 chai.use(chaiHttp);
 
 suite('Functional Tests', function () {
+  after(async function () {
+    testData.forEach(({ _id }) => Books.findByIdAndDelete(_id));
+  });
+
   /*
    * ----[EXAMPLE TEST]----
    * Each test should completely test the response of the API end-point including response status code!
-  
-  test('#example Test GET /api/books', function (done) {
+   */
+  test.skip('#example Test GET /api/books', function (done) {
     chai
       .request(server)
       .get('/api/books')
@@ -32,31 +37,9 @@ suite('Functional Tests', function () {
         done();
       });
   });
+  /*
    * ----[END of EXAMPLE TEST]----
    */
-
-  //extra test for deleting all books
-  /*
-  suite('Delete all books', function () {
-    test('DELETE /api/books => deletes all books', function (done) {
-      chai
-        .request(server)
-        .delete('/api/books')
-        .end(function (err, res) {
-          assert.equal(res.status, 200);
-          assert.equal(res.text, 'complete delete successful');
-        });
-      chai
-        .request(server)
-        .get('/api/books')
-        .end(function (err, res) {
-          assert.equal(res.status, 200);
-          assert.equal(res.body.length, 0);
-          done();
-        });
-    });
-  });
-  */
 
   let testData = [{ title: 'Test title 0' }, { title: 'Test title 1' }];
 
@@ -203,23 +186,6 @@ suite('Functional Tests', function () {
             assert.equal(res.text, 'no book exists');
             done();
           });
-        //to delete the data, so all test data is deleted from the db at the end
-        /*
-        chai
-          .request(server)
-          .delete(`/api/books/${testData[1]._id}`)
-          .end(function (err, res) {
-            assert.equal(res.status, 200);
-          });
-        chai
-          .request(server)
-          .get(`/api/books/${testData[1]._id}`)
-          .end(function (err, res) {
-            assert.equal(res.status, 200);
-            assert.equal(res.text, 'no book exists');
-            done();
-          });
-          */
       });
 
       test('Test DELETE /api/books/[id] with  id not in db', function (done) {
@@ -230,6 +196,27 @@ suite('Functional Tests', function () {
           .end(function (err, res) {
             assert.equal(res.status, 200);
             assert.equal(res.text, 'no book exists');
+            done();
+          });
+      });
+    });
+
+    //extra test for deleting all books
+    suite.skip('Delete all books', function () {
+      test('DELETE /api/books => deletes all books', function (done) {
+        chai
+          .request(server)
+          .delete('/api/books')
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.equal(res.text, 'complete delete successful');
+          });
+        chai
+          .request(server)
+          .get('/api/books')
+          .end(function (err, res) {
+            assert.equal(res.status, 200);
+            assert.equal(res.body.length, 0);
             done();
           });
       });
