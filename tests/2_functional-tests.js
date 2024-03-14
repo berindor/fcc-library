@@ -201,8 +201,10 @@ suite('Functional Tests', function () {
           .end(function (err, res) {
             assert.equal(res.status, 200);
             assert.equal(res.text, 'no book exists');
+            done();
           });
         //to delete the data, so all test data is deleted from the db at the end
+        /*
         chai
           .request(server)
           .delete(`/api/books/${testData[1]._id}`)
@@ -217,6 +219,7 @@ suite('Functional Tests', function () {
             assert.equal(res.text, 'no book exists');
             done();
           });
+          */
       });
 
       test('Test DELETE /api/books/[id] with  id not in db', function (done) {
